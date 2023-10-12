@@ -1,0 +1,33 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+{% for listing in listings %}
+<h1>{{listing}}</h1>
+{% endfor %}
+
+<div>
+    {% for listing in listings %}
+    <p>{{listing.description}}</p>
+    {% endfor %}
+
+
+    {% for listing in listings %}
+
+    <form action="{% url 'bidListing' listing.id %}" method="POST">
+        {%csrf_token%}
+        <input type="text" placeholder="Bid Amount: $" name="Bid">
+        <input type="submit" value="Bid">
+    </form>
+
+    {% endfor %}
+    
+
+    <div> {{ message }}</div>
+
+    <div>biggest bid: {{biggest_bid}}</div>
+
+    <div>id: {{listing_id}}</div>
+
+</div>
+
+{% endblock %}
