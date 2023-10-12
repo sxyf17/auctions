@@ -13,7 +13,7 @@
 
     {% for listing in listings %}
 
-    <form action="{% url 'bidListing' listing.id %}" method="POST">
+    <form action="{% url 'addBid' listing.id %}" method="POST">
         {%csrf_token%}
         <input type="text" placeholder="Bid Amount: $" name="Bid">
         <input type="submit" value="Bid">
@@ -24,9 +24,7 @@
 
     <div> {{ message }}</div>
 
-    <div>biggest bid: {{biggest_bid}}</div>
-
-    <div>id: {{listing_id}}</div>
+    <div>biggest bid: {{maxBid}}</div>
 
 </div>
 

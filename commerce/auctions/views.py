@@ -5,7 +5,8 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Max
-#todo, bidlisting: compare user bid to max bid in database, add to database if higher than max and also starting bid
+#todo, addbid: change to get max bid from bids specific to listing instead of max of all bids
+
 
 from .models import *
 
@@ -17,24 +18,44 @@ def index(request):
         return render(request, "auctions/index.html", {
             "listings": Listing.objects.all()
         })
-        
-def bidListing(request, listing_id):
-    listing = Listing.objects.get(id=listing_id)
+ 
+@login_required        
+def addBid(request, listing_id): #add bid to listing
+    #create bid object, save bid
+        #bid = bidamt and user, get user
+    #get all bids
+    #compare bids, get biggest bid
+    #if this bid is the biggest, add to listing
+    #display this bid
+    bidUser = request.user
     if request.method == "POST":
+        userListing = Listing.objects.get(pk=listing_id)
         bidAmount = request.POST['Bid']
-        try:
-            bid_amount = float(bidAmount) #tries to convert text to float, if successful, then valid value for bid
+        try: #check if bid amt is valid
+            bidAmount = float(bidAmount) #tries to convert text to float, if successful, then valid value for bid
         except ValueError:
             return render(request, "auctions/listing.html", {
                 "message": "Enter a valid number"
             })
-        
-        # if bid_amount > largestBid and bid_amount >=
-        listing_id = request.POST.get('listing_id') #gets id of listing
-        largestBid = Bids.objects.filter(id=listing_id).order_by('-bid_amount')[0]
-        return render(request, "auctions/listing.html", {
-            "biggest_bid": largestBid
-        })
+        bid = Bid(amount=bidAmount, user=bidUser)
+        maxBid = Bid.objects.filter(listing=userListing) #gets only bids for this listing
+        maxBid = maxBid.aggregate(Max('amount'))['amount__max']
+        try: #try convert maxBid to float
+            maxBid = float(maxBid)
+            if bidAmount > maxBid:
+                bid.save()
+                return render(request, "auctions/listing.html", {
+                    "maxBid": bid
+                })
+                
+        except ValueError: #means there was no maxBid, add this bid to list, new maxBid
+            bid.save()
+            return render(request, "auction/listing.html", {
+                "maxBid": bid
+            })      
+    return render(request, "auctions/listing.html", {
+            "maxBid": maxBid
+            })
         
         
         

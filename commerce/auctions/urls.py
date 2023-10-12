@@ -8,5 +8,5 @@ urlpatterns = [
     path("logout", views.logout_view, name="logout"),
     path("register", views.register, name="register"),
     path("listing", views.listing, name="listing"),
-    path("<int:listing_id>", views.bidListing, name="bidListing")
+    path("<int:listing_id>", views.addBid, name="addBid")
 ]

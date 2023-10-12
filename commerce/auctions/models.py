@@ -11,26 +11,28 @@ class Listing(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="listingOwner")
     title = models.CharField(max_length=64) #name of listing
     description = models.CharField(max_length=1024) #allow for short description of item
-    startingBid = models.ForeignKey('Bids',on_delete=models.CASCADE, related_name="startingBids",null=True)
+    bid = models.ForeignKey('Bid',on_delete=models.CASCADE, related_name="startingBids",null=True,blank=True)
     imageUrl = models.CharField(max_length=1024,null=True)
-    listingCategory = models.ForeignKey('Category',on_delete=models.CASCADE, related_name="categories",null=True)
+    category = models.ForeignKey('Category',on_delete=models.CASCADE, related_name="categories",null=True)
     
     def __str__(self):
         return f"{(self.title).capitalize()}"
     
 
-class Bids(models.Model):
-    bid_amount = models.PositiveIntegerField()
-    bid_listing = models.ForeignKey(Listing, on_delete=models.CASCADE,related_name="bidListings")
-    bid_user = models.ForeignKey(User,on_delete=models.CASCADE,related_name="bidUsers")
+class Bid(models.Model):
+    amount = models.FloatField(null=True)
+    user = models.ForeignKey(User,on_delete=models.CASCADE,related_name="bidUsers")
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="bidListings",null=True)
     def __str__(self):
-        return f"{self.bid_amount}"
+        return f"{self.amount} made by {self.user} for {self.listing}"
     
 class Category(models.Model):
     category = models.CharField(max_length=64)
+    def __str__(self):
+        return f"{self.category}"
 
-class Comments(models.Model):
-    comment = models.CharField(max_length=256) #comments
+class Comment(models.Model):
+    comment = models.TextField() #comments
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="userComment")
     listingComment = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="listingComment")
     
@@ -38,5 +40,8 @@ class Comments(models.Model):
         return f"{self.author} commented: '{self.comment}', on '{self.listingComment}'"
     
 #watchlist class
+class Watchlist(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="watchlistItems")
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="watchListings")
 
 
