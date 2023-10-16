@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 
+
 class User(AbstractUser):
     pass
 
@@ -39,7 +40,9 @@ class Comment(models.Model):
     
 #watchlist class
 class Watchlist(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="watchlistItems")
-    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="watchListings")
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="watchlist")
+    listings = models.ManyToManyField('Listing', related_name="watchlist_items")
 
+    def __str__(self):
+        return f"{self.user}'s Watchlist"
 

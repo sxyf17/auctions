@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Max
 from .models import *
-
+#to do: fix imgurl,
 
 def index(request):
     listings = Listing.objects.all()
@@ -53,6 +53,10 @@ def addBid(request, listingID): #add bid to listing
             })
     return render(request, "auctions/listing.html")
 
+def closeListing(request, listingID):
+    listingToDelete = Listing.objects.get(pk=listingID)
+    listingToDelete.delete()
+    return HttpResponse("Listing Deleted Successfully")
 
 def getMaxBid(listingID):
     userListing = Listing.objects.get(pk=listingID)
@@ -62,6 +66,7 @@ def getMaxBid(listingID):
         
               
 def listing(request, listingID):
+    listingImage = None
     maxBid = getMaxBid(listingID)
 
     return render(request, "auctions/listing.html", {
@@ -120,3 +125,22 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "auctions/register.html")
+    
+def watchlist(request, listingID):
+    # Get the listing
+    listing = Listing.objects.get(pk=listingID)
+
+    # Get the user's watchlist or create it if it doesn't exist
+    watchlist, created = Watchlist.objects.get_or_create(user=request.user)
+
+    if listing in watchlist.listings.all():
+        # If the listing is already in the watchlist, remove it
+        watchlist.listings.remove(listing)
+        
+    else:
+        # If the listing is not in the watchlist, add it
+        watchlist.listings.add(listing)
+        
+    # Redirect back to the listing's detail page
+    return HttpResponseRedirect(reverse("listing", args=[listingID]))
+        
