@@ -52,6 +52,28 @@ def addBid(request, listingID): #add bid to listing
                 "maxBid": bid
             })
     return render(request, "auctions/listing.html")
+    
+
+def categories(request):
+    categories = Category.objects.all()
+    listings = Listing.objects.all()
+    return render(request, "auctions/categories.html", {
+        "categories": categories,
+        "listings": listings
+    })
+    
+def categoryListings(request, categoryID):
+    category = Category.objects.get(pk=categoryID)
+    listings = Listing.objects.filter(category=category)
+    if category is not None:
+        for listing in listings:
+            return render(request, "auctions/categoryListings.html", {
+                "listings": listings
+            })
+    
+    return render(request, "auctions/categories.html", {
+        "message": f"No items in this category: {category}"
+    })
 
 def closeListing(request, listingID):
     listingToDelete = Listing.objects.get(pk=listingID)

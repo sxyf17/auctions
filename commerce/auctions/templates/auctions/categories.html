@@ -1,0 +1,21 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+
+{% if user.is_superuser %}
+    <p>You are a superuser.</p>
+{% endif %}
+
+{{message}}
+
+{%for category in categories%}
+   
+    <li>
+      
+            <a href="{% url 'categoryListings' category.id%}">{{category}}</a>
+    
+    </li>    
+    
+{% endfor %}
+
+{% endblock %}
