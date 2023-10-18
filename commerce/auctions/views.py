@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Max
 from .models import *
-#to do: fix imgurl,
+#to do: fix imgurl, 'create listing' page, ability to close listing, comments,
 
 def index(request):
     listings = Listing.objects.all()
@@ -165,4 +165,19 @@ def watchlist(request, listingID):
         
     # Redirect back to the listing's detail page
     return HttpResponseRedirect(reverse("listing", args=[listingID]))
+
+def viewWatchlist(request):
+    watchlist = request.user.watchlist #gets user's watchlist and displays it
+    if watchlist:
+        listings = watchlist.listings.all()  # Get all listings in the watchlist
+        return render(request, "auctions/watchlist.html", {
+            "watchlist": watchlist,
+            "listings": listings,
+            "message": f"{request.user}'s Watchlist"
+        })
+    else:
+        return render(request, "auctions/watchlist.html", {
+            "message": "No items in watchlist"
+        })
+    
         

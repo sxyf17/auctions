@@ -2,6 +2,13 @@
 
 {% block body %}
 
-hello
+{{message}}
+
+
+    {% for listing in listings %}
+        <li>
+            <a href="{% url 'listing' listing.id %}">{{listing}}</a>
+        </li>
+    {% endfor %}
 
 {% endblock %}
