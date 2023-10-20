@@ -4,9 +4,24 @@
         <h2>Active Listings</h2>
         <div>
             {% for listing in listings %}
-            <li>
-                <a href="{% url 'listing' listing.id %}">{{ listing.title }} </a>
-            </li>
+                {% if listing.isActive %}
+                    <li>
+                        <a href="{% url 'listing' listing.id %}">{{ listing.title }} </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <br>
+        
+        <h2>Closed Listings</h2>
+        <div>
+            {% for listing in listings %}
+                {% if not listing.isActive %}
+                    <li>
+                        <a href="{% url 'listing' listing.id %}">{{ listing.title }} </a>
+                    </li>
+                {% endif %}
             {% endfor %}
         </div>
         

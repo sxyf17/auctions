@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Max
 from .models import *
-#to do: fix imgurl, 'create listing' page, ability to close listing, comments,
+#to do: fix showing winner of closed listing (get a maxBidUser)
 
 def index(request):
     listings = Listing.objects.all()
@@ -21,7 +21,7 @@ def addBid(request, listingID): #add bid to listing
     bidUser = request.user
     listings = Listing.objects.all()
     userListing = Listing.objects.get(pk=listingID)
-    maxBid = getMaxBid(listingID)
+    maxBid, maxBidUser = getMaxBid(listingID,bidUser)
     
     if request.method == "POST":
         
@@ -37,12 +37,14 @@ def addBid(request, listingID): #add bid to listing
             maxBid = float(maxBid)
             if bidAmount > maxBid: #if this bid is the biggest, add to listing
                 bid.save()
-                
+                maxBid=bid
+                maxBidUser = maxBid.user
                 return redirect('listing', listingID=listingID)
             else:
                 return render(request, "auctions/listing.html", {
                     "listings": listings,
                     "maxBid": maxBid,
+                    "maxBidUser": maxBidUser,
                     "message": "Bid must be greater than current bid."
                     })   
         except ValueError: #means there was no maxBid, add this bid to list, new maxBid
@@ -52,6 +54,32 @@ def addBid(request, listingID): #add bid to listing
                 "maxBid": bid
             })
     return render(request, "auctions/listing.html")
+
+
+@login_required
+def addComment(request, listingID):
+    user = request.user
+    
+    if request.method == "POST":
+        userComment = request.POST['comment']
+        listing = Listing.objects.get(pk=listingID)
+        comment = Comment(comment=userComment, user=user, listing=listing)
+        comment.save()
+        listing.comments.add(comment)
+        comments = Comment.objects.filter(listing=listing)
+        watchlist, created = Watchlist.objects.get_or_create(user=request.user)
+        maxBid, maxBidUser = getMaxBid(listingID, user)
+        
+        return render(request, "auctions/listing.html", {
+            "listing": listing,
+            "comments": comments,
+            "watchlist": watchlist,
+            "maxBid": maxBid,
+            "maxBidUser": maxBidUser
+        })
+
+    return redirect('listing', listingID=listingID)
+        
     
 
 def categories(request):
@@ -61,6 +89,7 @@ def categories(request):
         "categories": categories,
         "listings": listings
     })
+ 
     
 def categoryListings(request, categoryID):
     category = Category.objects.get(pk=categoryID)
@@ -75,25 +104,64 @@ def categoryListings(request, categoryID):
         "message": f"No items in this category: {category}"
     })
 
+@login_required
 def closeListing(request, listingID):
-    listingToDelete = Listing.objects.get(pk=listingID)
-    listingToDelete.delete()
-    return HttpResponse("Listing Deleted Successfully")
+    listingToClose = Listing.objects.get(pk=listingID)
+    listingToClose.isActive = False
+    listingToClose.save()
+    return HttpResponse("Listing Closed Successfully")
 
-def getMaxBid(listingID):
+
+@login_required
+def createListing(request):
+    if request.method == "POST":
+        user = request.user
+        title = request.POST['title']
+        description = request.POST['description']
+        imageUrl = request.POST['imageUrl']
+        
+        category, created = Category.objects.get_or_create(category=request.POST['category'])
+        tempListing = Listing(owner=user,title=title,description=description,imageUrl=imageUrl,category=category)
+        tempListing.save()
+        bid = Bid(amount=request.POST['bid'],user=user,listing=tempListing)
+        bid.save()
+        tempListing.bid = bid
+        tempListing.save()
+        
+        
+        return render(request, "auctions/createListing.html", {
+            "message": f"Your listing: {title}, has been succesfully added!"
+        })
+    return render(request, "auctions/createListing.html")
+
+
+def getMaxBid(listingID, bidUser):
     userListing = Listing.objects.get(pk=listingID)
     maxBid = Bid.objects.filter(listing=userListing) #gets only bids for this listing
     maxBid = maxBid.aggregate(Max('amount'))['amount__max'] #compare bids, get biggest bid
-    return maxBid
+    try:
+        maxBidUser = Bid.objects.get(amount=maxBid,user=bidUser,listing=userListing)
+        maxBidUser = maxBidUser.user
+    except Bid.DoesNotExist:
+        maxBidUser = None  # Handle the case where there is no maxBidUser
+    return maxBid, maxBidUser
         
               
 def listing(request, listingID):
-    listingImage = None
-    maxBid = getMaxBid(listingID)
+    # Get the specific listing based on listingID
+    listing = Listing.objects.get(pk=listingID)
+    bidUser = request.user
+    # Get the maximum bid for this listing
+    maxBid, maxBidUser = getMaxBid(listingID, bidUser)
+    
+    comments = Comment.objects.filter(listing=listing)
 
+    # Render the template with the specific listing
     return render(request, "auctions/listing.html", {
-        "listings": Listing.objects.all(),
-        "maxBid": maxBid
+        "listing": listing,
+        "maxBid": maxBid,
+        "maxBidUser": maxBidUser,
+        "comments": comments
     })
     
 
@@ -147,6 +215,7 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "auctions/register.html")
+   
     
 def watchlist(request, listingID):
     # Get the listing
@@ -165,6 +234,7 @@ def watchlist(request, listingID):
         
     # Redirect back to the listing's detail page
     return HttpResponseRedirect(reverse("listing", args=[listingID]))
+
 
 def viewWatchlist(request):
     watchlist = request.user.watchlist #gets user's watchlist and displays it

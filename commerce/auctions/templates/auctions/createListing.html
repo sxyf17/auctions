@@ -1,0 +1,21 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+<h2>Create Listing</h2>
+<form method="POST" action="{% url 'createListing' %}">
+    {%csrf_token%}
+    <input type="text" name="title" placeholder="Enter Listing Title:">
+    <input type="text" name="description" placeholder="Enter Description:">
+    <input type="text" name="category" placeholder="Enter Category:">
+    <input type="text" name="bid" placeholder="Enter Starting Bid:">
+    <input type="text" name="imageUrl" placeholder="(OPTIONAL) Image url here:">
+    <br>
+    <input type="submit">
+
+</form>
+
+<p>{{message}}</p>
+
+    
+    
+{% endblock %}

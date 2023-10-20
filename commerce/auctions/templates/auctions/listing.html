@@ -1,13 +1,16 @@
 {% extends "auctions/layout.html" %}
 
 {% block body %}
-{% for listing in listings %}
-    <h1>Listing: {{listing.title}}</h1>
+    <h1>Listing: {{ listing.title }}</h1>
 
-    {% if user.is_authenticated and user == listing.owner %}
+    {% if not listing.isActive and user == maxBidUser %}
+        <h1 style="color:red">You Won!</h1>
+    {% endif %}
+
+    {% if user.is_authenticated and user == listing.owner and listing.isActive %}
     <form action="{% url 'closeListing' listing.id %}" method="POST">
         {% csrf_token %}
-        <button type="submit">CLOSE LISTING </button>
+        <button type="submit">CLOSE LISTING</button>
     </form>
     {% endif %}
     
@@ -22,29 +25,40 @@
         </button>
     </form>
 
-
     <br>
-    <img src="{{listing.imageUrl}}" alt="testImage">
-    <p>{{listing.description}}</p>
+    <img src="{{ listing.imageUrl }}" alt="{{ listing.title }}">
+    <p>{{ listing.description }}</p>
 
-    <h3>${{maxBid}}</h3> 
+    <h3>${{ maxBid }}</h3>
     <form action="{% url 'addBid' listing.id %}" method="POST">
-  
-        {%csrf_token%}
+        {% csrf_token %}
         <input type="text" placeholder="Bid: $" name="Bid">
-        <input type="submit" value="Bid">  
-
+        <input type="submit" value="Bid">
     </form>
     <div> {{ message }}</div>
     <br>
     <h5>Details</h5>
     <div>
-        Listed by: {{listing.owner}}
+        Listed by: {{ listing.owner }}
         <br>
-        Category: {{listing.category}}
+        Category: {{ listing.category }}
     </div>
-    
-    
- {% endfor %}
+    <br>
+    <h5>Comments</h5>
+
+    <form action="{% url 'addComment' listing.id %}" method="POST">
+        {%csrf_token%}
+        <input type="text" placeholder="comment:" name="comment">
+        <input type="submit" value="comment">
+    </form>
+    {% if comments %}
+    <ul>
+        {% for comment in comments %}
+            <li>{{ comment.user }} commented: '{{ comment.comment }}'</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+        <p>No comments yet.</p>
+    {% endif %}
 
 {% endblock %}

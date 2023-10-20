@@ -11,8 +11,10 @@ class Listing(models.Model):
     title = models.CharField(max_length=64) #name of listing
     description = models.CharField(max_length=1024) #allow for short description of item
     bid = models.ForeignKey('Bid',on_delete=models.CASCADE, related_name="startingBids",null=True,blank=True)
-    imageUrl = models.CharField(max_length=1024,null=True)
+    imageUrl = models.TextField(max_length=5000,null=True)
     category = models.ForeignKey('Category',on_delete=models.CASCADE, related_name="categories",null=True)
+    comments = models.ManyToManyField('Comment', related_name='listingComments',default=None)
+    isActive = models.BooleanField(default=True)
     
     def __str__(self):
         return f"{(self.title).capitalize()}"
@@ -33,11 +35,11 @@ class Category(models.Model):
 
 class Comment(models.Model):
     comment = models.TextField() #comments
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="userComment")
-    listingComment = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="listingComment")
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="commentListing", default=None)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="userComment")
     
     def __str__(self):
-        return f"{self.author} commented: '{self.comment}', on '{self.listingComment}'"
+        return f"{self.user} commented: '{self.comment}'"
     
 #watchlist class
 class Watchlist(models.Model):
